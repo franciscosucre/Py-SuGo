@@ -1,6 +1,6 @@
 {
     "python.linting.enabled": true,
-    "python.pythonPath": "/Users/franciscojaviersucregonzalez/.virtualenvs/python3-server/bin/python",
+    "python.pythonPath": "/Users/franciscojaviersucregonzalez/.virtualenvs/python-wsgi-server/bin/python",
     "python.autoComplete.addBrackets": true,
     "python.linting.mypyEnabled": true,
     "python.linting.pylintEnabled": true,
