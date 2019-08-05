@@ -47,8 +47,9 @@ class Request():
         self.query = parse_qs(environ.get('QUERY_STRING', ''))
         self.content_length = environ.get('CONTENT_LENGTH', '')
         self.headers = dict()
-        for key in filter(lambda key: key in HTTP_HEADERS or key.startswith('HTTP'), environ.keys()):
-            self.headers[key.replace('HTTP', '')] = environ.get(key)
+        keys = list(map(lambda x: x.replace('HTTP_', ''),  environ.keys()))
+        for key in filter(lambda key: key in HTTP_HEADERS, keys):
+            self.headers[key.replace('HTTP_', '')] = environ.get(key)
         self._read_request_body()
 
     def _read_request_body(self):
@@ -56,7 +57,7 @@ class Request():
             request_body_size = int(self.headers.get('CONTENT_LENGTH', 0))
         except (ValueError):
             request_body_size = 0
-        readbytes = self._environ['wsgi.input'].read(request_body_size)  # returns bytes object
+        readbytes = self.wsgi_input.read(request_body_size)  # returns bytes object
         self.raw_body = readbytes.decode('utf-8')  # returns str object
 
 
