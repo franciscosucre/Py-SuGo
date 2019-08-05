@@ -1,13 +1,7 @@
-from application import Application, Request, Response, NextFunction
 import json
-from wsgiref.simple_server import make_server, WSGIServer
+from wsgiref.simple_server import WSGIServer, make_server
 
-
-class Server(WSGIServer):
-    pass
-
-    def finish_request(self, request, client_address):
-        return super().finish_request(request, client_address)
+from application import Application, NextFunction, Request, Response
 
 
 def handle(request: Request, response: Response, next=None):
@@ -21,6 +15,7 @@ def parse_body_json(request: Request, response: Response, next_handler: NextFunc
     except:
         request.body = dict()
     return next_handler()
+
 
 def log_response(request: Request, response: Response, next_handler: NextFunction):
     result = next_handler()
