@@ -1,8 +1,10 @@
+# Standard libs imports
 import json
 from wsgiref.simple_server import WSGIServer, make_server
 
-from application import Application, NextFunction, Request, Response
-
+# Third party libs imports
+from application import Request, Response, Application, NextFunction
+∫
 
 def handle(request: Request, response: Response, next=None):
     response.status(201)
