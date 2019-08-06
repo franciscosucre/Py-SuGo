@@ -112,12 +112,11 @@ class Application():
 
         def next_layer():
             if (self.current_layer >= len(self.middlewares)):
-                return
+                return self.request_handler(request, response)
             layer = self.middlewares[self.current_layer]
             self.current_layer += 1
             layer(request, response, next_layer)
         next_layer()
-        self.request_handler(request, response)
         yield str(request.body).encode('utf-8')
         return request.body
 
