@@ -3,7 +3,7 @@ import json
 from email.message import Message
 from http import HTTPStatus
 from io import BufferedReader
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast, Union, Iterable
 from urllib.parse import parse_qs
 from wsgiref.headers import Headers
 from wsgiref.util import is_hop_by_hop
@@ -75,6 +75,7 @@ class Response():
     request: Request
     status_code: int = 200
     body: Any = dict()
+    bytes_body: bytes
 
     def __init__(self, start_response, request: Request):
         self.request = request
@@ -87,10 +88,10 @@ class Response():
     def json(self: 'Response', data: Dict):
         self.headers.add_header('CONTENT_TYPE', 'application/json')
         self.body = data
-        self._start_response('200 OK', self.headers.items())
         string_body: str = json.dumps(data)
-        byte_body: bytes = string_body.encode('utf-8')
-        return byte_body
+        self.bytes_body = string_body.encode('utf-8')
+        self._start_response('200 OK', self.headers.items())
+        return self.bytes_body
 
 
 NextFunction = Callable[[], Any]
@@ -109,14 +110,18 @@ class Application():
         request = Request(environ)
         response = Response(start_response, request)
 
-        def next_handler():
-            if self.current_layer >= len(self.middlewares):
-                return self.request_handler(request, response)
-            layer = self.middlewares[self.current_layer]
+        def middleware_generator() -> Iterable[Middleware]:
+            layer: Middleware = self.middlewares[self.current_layer]
             self.current_layer += 1
-            return layer(request, response, next_handler)
-
-        yield next_handler()
+            yield layer(request, response, middleware_generator)
+        while self.current_layer < len(self.middlewares):
+            try:
+                item = next(middleware_generator())
+            except StopIteration:
+                break
+        self.request_handler(request, response)
+        yield str(request.body).encode('utf-8')
+        return request.body
 
     def use_middleware(self: 'Application', middleware: Middleware):
         self.middlewares.append(middleware)

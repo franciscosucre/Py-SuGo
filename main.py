@@ -4,7 +4,7 @@ from wsgiref.simple_server import WSGIServer, make_server
 
 # Third party libs imports
 from application import Request, Response, Application, NextFunction
-∫
+
 
 def handle(request: Request, response: Response, next=None):
     response.status(201)
@@ -20,7 +20,7 @@ def parse_body_json(request: Request, response: Response, next_handler: NextFunc
 
 
 def log_response(request: Request, response: Response, next_handler: NextFunction):
-    result = next_handler()
+    result = next(next_handler())
     print(response.body)
     return result
 
