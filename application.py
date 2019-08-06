@@ -110,15 +110,13 @@ class Application():
         request = Request(environ)
         response = Response(start_response, request)
 
-        def middleware_generator() -> Iterable[Middleware]:
-            layer: Middleware = self.middlewares[self.current_layer]
+        def next_layer():
+            if (self.current_layer >= len(self.middlewares)):
+                return
+            layer = self.middlewares[self.current_layer]
             self.current_layer += 1
-            yield layer(request, response, middleware_generator)
-        while self.current_layer < len(self.middlewares):
-            try:
-                item = next(middleware_generator())
-            except StopIteration:
-                break
+            layer(request, response, next_layer)
+        next_layer()
         self.request_handler(request, response)
         yield str(request.body).encode('utf-8')
         return request.body

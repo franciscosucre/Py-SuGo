@@ -20,9 +20,9 @@ def parse_body_json(request: Request, response: Response, next_handler: NextFunc
 
 
 def log_response(request: Request, response: Response, next_handler: NextFunction):
-    result = next(next_handler())
+    next_handler()
     print(response.body)
-    return result
+    return
 
 
 if __name__ == "__main__":
