@@ -21,14 +21,15 @@ class Application():
         request = Request(environ)
         response = Response(start_response, request)
 
-        def next_handler():
-            if self.current_layer >= len(self.middlewares):
+        def next_layer():
+            if (self.current_layer >= len(self.middlewares)):
                 return self.request_handler(request, response)
             layer = self.middlewares[self.current_layer]
             self.current_layer += 1
-            return layer(request, response, next_handler)
-
-        yield next_handler()
+            layer(request, response, next_layer)
+        next_layer()
+        yield str(request.body).encode('utf-8')
+        return request.body
 
     def use_middleware(self: 'Application', middleware: Middleware):
         self.middlewares.append(middleware)
