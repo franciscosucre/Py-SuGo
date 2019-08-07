@@ -4,7 +4,6 @@ from wsgiref.simple_server import WSGIServer, make_server
 
 # Third party libs imports
 from application import Request, Response, Application, NextFunction
-∫
 
 def handle(request: Request, response: Response, next=None):
     response.status(201)
