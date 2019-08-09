@@ -51,8 +51,10 @@ class Request():
     id: str = ''.join(random.choice(chars) for i in range(30))
     headers: Headers = Headers()
     body: Any = dict()
+    raw_body: bytes
 
     def __init__(self, environ: dict):
+        self.environ = environ
         self.wsgi_input: BufferedReader = cast(BufferedReader, environ.get('wsgi.input'))
         self.path = environ.get('PATH_INFO')
         self.port = environ.get('PORT', '')
@@ -68,5 +70,4 @@ class Request():
             request_body_size = int(self.headers.get('CONTENT_LENGTH', '0'))
         except (ValueError):
             request_body_size = 0
-        readbytes = self.wsgi_input.read(request_body_size)  # returns bytes object
-        self.raw_body = readbytes.decode('utf-8')  # returns str object
+        self.raw_body = self.wsgi_input.read(request_body_size)  # returns bytes object
