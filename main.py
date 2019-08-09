@@ -1,5 +1,5 @@
 # Standard libs imports
-from typing import List, cast
+from typing import List, cast, Any, Dict
 import json
 from wsgiref.simple_server import WSGIServer, make_server
 import cgi
@@ -15,36 +15,40 @@ def handle(request: Request, response: Response):
     response.status(201)
     return response.json({"hola": "mundo"})
 
+class FileData():
+    def __init__(self:'FileData', content: bytes, filename: str, content_type: str):
+        self.content = content
+        self.filename = filename
+        self.content_type = content_type
+
 def parse_body_form_data(request: Request, response: Response, next_layer: NextFunction):
     content_type: str = cast(str,request.headers.get('CONTENT_TYPE'))
     is_form_data = content_type.find('multipart/form-data') >= 0
     if is_form_data:
-        form_data = cgi.FieldStorage(
+        form_data: cgi.FieldStorage = cgi.FieldStorage(
             fp=io.BytesIO(request.raw_body),
             environ=request.environ,
             keep_blank_values=True
         )
-        
         field_storages: List[cgi.FieldStorage] = cast(List[cgi.FieldStorage], form_data.list)
-        request.files = list()
-        request.fields = dict()
+        files : List[FileData] = list()
+        fields: Dict[str, Any] = dict()
 
         for element in field_storages:
             value = form_data.getvalue(element.name)
             if element.filename:
-                request.files.append(element)
+                files.append(FileData(value, element.filename, element.type))
             else:
-                request.fields[element.name] = value
-            
-        pass
+                fields[element.name] = value
+        request.body['files'] = files
+        request.body['fields'] = fields
 
     return next_layer()
 
 def parse_body_json(request: Request, response: Response, next_layer: NextFunction):
-    try:
+    content_type: str = cast(str,request.headers.get('CONTENT_TYPE'))
+    if content_type.find('application/json') >= 0:
         request.body = json.loads(request.raw_body)
-    except json.JSONDecodeError as e:
-        request.body = dict()
     return next_layer()
 
 
