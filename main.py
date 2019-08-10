@@ -7,8 +7,6 @@ from middleware import parse_body_json, parse_body_form_data, log_request, log_r
 
 
 def handle(request: Request, response: Response):
-    raise ArithmeticError()
-    raise Exception("ERROoooor")
     response.status(201)
     return response.json({"hola": "mundo"})
 
