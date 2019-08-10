@@ -1,9 +1,9 @@
 # Standard libs imports
 import random
 from io import BufferedReader
-from string import (
-    digits, octdigits, punctuation, ascii_lowercase, ascii_uppercase)
-from typing import Any, List, cast
+from string import (ascii_lowercase, ascii_uppercase, digits, octdigits,
+                    punctuation)
+from typing import List, cast
 from urllib.parse import parse_qs
 from wsgiref.headers import Headers
 
@@ -44,20 +44,33 @@ HTTP_HEADERS: List[str] = [
     "WARNING",
 ]
 
-chars: str = ascii_lowercase + ascii_uppercase + digits + octdigits + punctuation
+chars: str = ascii_lowercase + ascii_uppercase + digits + octdigits
 
 
 class Request():
     id: str = ''.join(random.choice(chars) for i in range(30))
+    environ: dict
+    wsgi_input: BufferedReader
+    path: str
+    method: str
+    port: str
+    host: str
+    protocol: str
+    server_name: str
+    query: dict
     headers: Headers = Headers()
-    body: Any = dict()
+    body: dict = dict()
     raw_body: bytes
 
     def __init__(self, environ: dict):
         self.environ = environ
         self.wsgi_input: BufferedReader = cast(BufferedReader, environ.get('wsgi.input'))
-        self.path = environ.get('PATH_INFO')
+        self.path = environ.get('PATH_INFO', '')
+        self.method = environ.get('REQUEST_METHOD', '')
         self.port = environ.get('PORT', '')
+        self.host = environ.get('HTTP_HOST', '')
+        self.protocol = environ.get('HTTP_PROTOCOL', '')
+        self.server_name = environ.get('SERVER_NAME', '')
         self.query = parse_qs(environ.get('QUERY_STRING', ''))
         for key in environ.keys():
             replaced_key = key.replace('HTTP_', '')
