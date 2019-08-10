@@ -1,16 +1,16 @@
 # Standard libs imports
-import cgi
 import io
+import cgi
 import json
 import logging
 import traceback
-from datetime import datetime
 from typing import Any, Dict, List
+from datetime import datetime
 
-from application import NextFunction
 # Third party libs imports
 from request import Request
 from response import Response
+from application import NextFunction
 
 logger = logging.Logger('APP_LOGGER')
 
