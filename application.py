@@ -1,12 +1,13 @@
 # Standard libs imports
-from typing import Any, Callable, List, Union
+from typing import Any, List, Union, Callable
 
 # Third party libs imports
 from request import Request
 from response import Response
 
 NextFunction = Callable[[], Any]
-Middleware = Union[Callable[[Request, Response, NextFunction], Any], Callable[[Request, Response], Any]]
+Middleware = Callable[[Request, Response, NextFunction], Any]
+RequestHandler = Callable[[Request, Response], Any]
 
 
 class Application():
