@@ -1,9 +1,12 @@
+# Standard libs imports
 import json
-from wsgiref.headers import Headers
-from typing import Any, Dict
 from http import HTTPStatus
+from typing import Any, Dict
+from wsgiref.headers import Headers
 
+# Third party libs imports
 from request import Request
+
 
 class Response():
     id: str
