@@ -14,7 +14,7 @@ class Application():
     middlewares: List[Middleware] = list()
     current_layer: int = 0
 
-    def __init__(self: 'Application', request_handler: Middleware):
+    def __init__(self: 'Application', request_handler: RequestHandler):
         self.request_handler = request_handler
 
     def __call__(self: 'Application', environ, start_response):
