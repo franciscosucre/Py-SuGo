@@ -13,13 +13,26 @@ Handler = Union[RequestHandler, Middleware]
 
 class RouteNotFoundException(Exception):
     message: str
-    route: str
+    url: str
     method: HttpMethod
 
-    def __init__(self, method: HttpMethod, route: str):
-        super(RouteNotFoundException, self).__init__(method, route)
+    def __init__(self, method: HttpMethod, url: str):
+        super(RouteNotFoundException, self).__init__(method, url)
         self.method = method
-        self.route = route
+        self.url = url
+        self.message = "Route not found: '%s' '%s' " % (method, url)
+
+
+class RouteAlreadyExistsException(Exception):
+    message: str
+    url: str
+    method: HttpMethod
+
+    def __init__(self, method: HttpMethod, url: str):
+        super(RouteAlreadyExistsException, self).__init__(method, url)
+        self.method = method
+        self.url = url
+        self.message = "Already added '%s' '%s' route" % (method, url)
 
 
 class Route:
@@ -58,7 +71,7 @@ class Router:
     def add_route(self: 'Router', method: HttpMethod, url_pattern: str, first_handler: Handler, *handlers: Handler):
         matches = [r for r in self.routes if r.method == method and r.url_pattern == url_pattern]
         if matches:
-            raise Exception("Already added '%s' '%s' route" % (method, url_pattern))
+            raise RouteAlreadyExistsException(method, url_pattern)
         route = Route(method, url_pattern, first_handler, *handlers)
         self.routes.append(route)
         return self
@@ -96,5 +109,5 @@ class Router:
         method_matched_routes = [r for r in self.routes if r.method == method]
         [route] = [r for r in method_matched_routes if r.regex.match(url)]
         if not route:
-            raise Exception("Route not found: '%s' '%s' " % (method, url))
+            raise RouteNotFoundException(method, url)
         return route
