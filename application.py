@@ -4,7 +4,7 @@ from typing import Any, List, Union, Callable
 # Third party libs imports
 from wsgiref.simple_server import WSGIServer, make_server
 
-from core import Middleware, RequestHandler
+from middleware import Middleware, RequestHandler
 from request import Request
 from response import Response
 

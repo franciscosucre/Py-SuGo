@@ -1,8 +1,4 @@
 from enum import Enum
-from typing import Callable, Any
-
-from request import Request
-from response import Response
 
 
 class HttpMethod(Enum):
@@ -15,6 +11,6 @@ class HttpMethod(Enum):
     OPTIONS = 'OPTIONS'
 
 
-NextFunction = Callable[[], Any]
-Middleware = Callable[[Request, Response, NextFunction], Any]
-RequestHandler = Callable[[Request, Response], Any]
+class HttpHeader(Enum):
+    CONTENT_TYPE = 'Content-Type'
+    CONTENT_LENGTH = 'Content-Length'

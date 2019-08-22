@@ -14,9 +14,9 @@ Handler = Union[RequestHandler, Middleware]
 class RouteNotFoundException(Exception):
     message: str
     url: str
-    method: HttpMethod
+    method: str
 
-    def __init__(self, method: HttpMethod, url: str):
+    def __init__(self, method: str, url: str):
         super(RouteNotFoundException, self).__init__(method, url)
         self.method = method
         self.url = url
@@ -26,9 +26,9 @@ class RouteNotFoundException(Exception):
 class RouteAlreadyExistsException(Exception):
     message: str
     url: str
-    method: HttpMethod
+    method: str
 
-    def __init__(self, method: HttpMethod, url: str):
+    def __init__(self, method: str, url: str):
         super(RouteAlreadyExistsException, self).__init__(method, url)
         self.method = method
         self.url = url
@@ -37,12 +37,12 @@ class RouteAlreadyExistsException(Exception):
 
 class Route:
     url_pattern: str
-    method: HttpMethod
+    method: str
     layers: List[Handler] = list()
     regex: Pattern
     current_layer: int = 0
 
-    def __init__(self: 'Route', method: HttpMethod, url_pattern: str, first_handler: Handler, *handlers: Handler):
+    def __init__(self: 'Route', method: str, url_pattern: str, first_handler: Handler, *handlers: Handler):
         self.url_pattern = url_pattern
         self.method = method
         self.regex = re.compile(url_pattern)
@@ -68,7 +68,7 @@ class Route:
 class Router:
     routes: List[Route] = list()
 
-    def add_route(self: 'Router', method: HttpMethod, url_pattern: str, first_handler: Handler, *handlers: Handler):
+    def add_route(self: 'Router', method: str, url_pattern: str, first_handler: Handler, *handlers: Handler):
         matches = [r for r in self.routes if r.method == method and r.url_pattern == url_pattern]
         if matches:
             raise RouteAlreadyExistsException(method, url_pattern)
@@ -77,37 +77,37 @@ class Router:
         return self
 
     def get(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.GET, url_pattern, first_handler, *handlers)
+        self.add_route(HttpMethod.GET.value, url_pattern, first_handler, *handlers)
         return self
 
     def post(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST, url_pattern, first_handler, *handlers)
+        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
         return self
 
     def put(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST, url_pattern, first_handler, *handlers)
+        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
         return self
 
     def patch(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST, url_pattern, first_handler, *handlers)
+        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
         return self
 
     def delete(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST, url_pattern, first_handler, *handlers)
+        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
         return self
 
     def head(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST, url_pattern, first_handler, *handlers)
+        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
         return self
 
     def options(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST, url_pattern, first_handler, *handlers)
+        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
         return self
 
-    def find_route(self: 'Router', method: HttpMethod, url: str) -> Route:
+    def find_route(self: 'Router', method: str, url: str) -> Route:
         # We make a search by method first to limit the choices for the regex filter, that is more resource consuming
         method_matched_routes = [r for r in self.routes if r.method == method]
-        [route] = [r for r in method_matched_routes if r.regex.match(url)]
-        if not route:
+        matches = [r for r in method_matched_routes if r.regex.match(url)]
+        if not matches:
             raise RouteNotFoundException(method, url)
-        return route
+        return matches.pop()

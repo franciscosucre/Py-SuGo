@@ -91,11 +91,11 @@ class Request:
                     final_key += part
                     if i + 1 < part_count:
                         final_key += '-'
-            self.headers.add_header(final_key, value)
+                self.headers.add_header(final_key, value)
 
     def _read_request_body(self: 'Request'):
         try:
-            request_body_size = int(self.headers.get('Content_Length', '0'))
+            request_body_size = int(self.headers.get('Content-Length', '0'))
         except ValueError:
             request_body_size = 0
         self.raw_body = self.wsgi_input.read(request_body_size)  # returns bytes object

@@ -4,16 +4,19 @@ import cgi
 import json
 import logging
 import traceback
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Callable
 from datetime import datetime
 
 # Third party libs imports
+from core import HttpHeader
 from request import Request
 from response import Response
-from application import NextFunction
+
+NextFunction = Callable[[], Any]
+Middleware = Callable[[Request, Response, NextFunction], Any]
+RequestHandler = Callable[[Request, Response], Any]
 
 logger = logging.Logger('APP_LOGGER')
-
 
 
 class FileData():
@@ -24,7 +27,7 @@ class FileData():
 
 
 def parse_body_form_data(request: Request, response: Response, next_layer: NextFunction):
-    content_type = request.headers.get('CONTENT_TYPE')
+    content_type = request.headers.get(HttpHeader.CONTENT_TYPE.value)
     assert content_type is not None
     is_form_data = content_type.find('multipart/form-data') >= 0
     if is_form_data:

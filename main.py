@@ -1,13 +1,9 @@
 # Third party libs imports
-from application import Request, Response, Application, NextFunction
-from middleware import parse_body_json, parse_body_form_data, log_request, log_response, handle_errors
+from application import Application
+from middleware import parse_body_json, parse_body_form_data, log_request, log_response, handle_errors, NextFunction
+from request import Request
+from response import Response
 from router import Router, HttpMethod
-
-
-def handle(request: Request, response: Response):
-    response.status(201)
-    route = router.find_route(HttpMethod.GET, '/hello')
-    return route.handle(request, response)
 
 def hello_world(request: Request, response: Response, next_layer: NextFunction):
     print("hello world")
@@ -18,6 +14,15 @@ def goobye_world(request: Request, response: Response):
     return response.json({"hola": "mundo"})
 
 
+router = Router()
+router.get('/(?P<what>)', hello_world, goobye_world)
+
+def handle(request: Request, response: Response):
+    route = router.find_route(request.method, request.path)
+    return route.handle(request, response)
+
+
+
 
 if __name__ == "__main__":
     app = Application(handle)
@@ -26,7 +31,6 @@ if __name__ == "__main__":
     app.use_middleware(log_response)
     app.use_middleware(parse_body_json)
     app.use_middleware(parse_body_form_data)
-    router = Router()
-    router.get('/(?P<what>)', hello_world, goobye_world)
+
     app.listen()
 
