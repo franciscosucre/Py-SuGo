@@ -2,7 +2,7 @@
 import random
 from io import BufferedReader
 from string import (ascii_lowercase, ascii_uppercase, digits, octdigits)
-from typing import List, cast
+from typing import List, cast, Any, Dict
 from urllib.parse import parse_qs
 from wsgiref.headers import Headers
 
@@ -65,6 +65,7 @@ class Request:
     headers: Headers = Headers()
     body: dict = dict()
     raw_body: bytes
+    params: Dict[str, Any] = dict()
 
     def __init__(self, environ: dict):
         self.environ = environ

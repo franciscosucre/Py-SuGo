@@ -45,7 +45,7 @@ class Route:
     def __init__(self: 'Route', method: str, url_pattern: str, first_handler: Handler, *handlers: Handler):
         self.url_pattern = url_pattern
         self.method = method
-        self.regex = re.compile(url_pattern)
+        self.regex = re.compile("^%s$" % url_pattern)
         route_handlers: List[Handler] = [first_handler]
         for handler in list(handlers):
             route_handlers.append(handler)
@@ -53,7 +53,9 @@ class Route:
 
     def handle(self, request: Request, response: Response):
         self.current_layer: int = 0
-
+        match = self.regex.match(request.path)
+        assert match is not None
+        request.params = match.groupdict()
         def next_layer():
             layer = self.layers[self.current_layer]
             self.current_layer += 1
