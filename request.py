@@ -6,6 +6,8 @@ from typing import List, cast
 from urllib.parse import parse_qs
 from wsgiref.headers import Headers
 
+from core import HttpHeader
+
 HTTP_HEADERS: List[str] = [
     "A_IM",
     "ACCEPT",
@@ -95,7 +97,7 @@ class Request:
 
     def _read_request_body(self: 'Request'):
         try:
-            request_body_size = int(self.headers.get('Content-Length', '0'))
+            request_body_size = int(self.headers.get(HttpHeader.CONTENT_LENGTH.value, '0'))
         except ValueError:
             request_body_size = 0
         self.raw_body = self.wsgi_input.read(request_body_size)  # returns bytes object

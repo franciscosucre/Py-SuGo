@@ -25,14 +25,13 @@ class Response():
         return self
 
     def json(self: 'Response', data: Dict):
-        self.body = data
         http_status = self._get_http_status(self.status_code)
         string_body: str = json.dumps(data)
-        byte_body: bytes = string_body.encode('utf-8')
+        self.body = bytes(string_body, 'utf-8')
         self.headers.add_header(HttpHeader.CONTENT_TYPE.value, 'application/json')
-        self.headers.add_header(HttpHeader.CONTENT_LENGTH.value, str(len(byte_body)))
+        self.headers.add_header(HttpHeader.CONTENT_LENGTH.value, str(len(self.body)))
         self._start_response('%d %s' % (http_status.value, http_status.phrase), self.headers.items())
-        return byte_body
+        return self.body
 
     def _get_http_status(self: 'Response', status_code: int):
         return list(filter(lambda h: h.value == status_code, list(HTTPStatus))).pop()

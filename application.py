@@ -29,7 +29,7 @@ class Application:
             self.current_layer += 1
             layer(request, response, next_layer)
         next_layer()
-        yield str(response.body).encode('utf-8')
+        yield response.body
         return response.body
 
     def use_middleware(self: 'Application', middleware: Middleware):
