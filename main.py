@@ -32,6 +32,5 @@ if __name__ == "__main__":
     app.use_middleware(log_response)
     app.use_middleware(parse_body_json)
     app.use_middleware(parse_body_form_data)
-
     app.listen()
 
