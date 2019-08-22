@@ -1,15 +1,17 @@
 # Standard libs imports
 import random
 from io import BufferedReader
-from string import (ascii_lowercase, ascii_uppercase, digits, octdigits,
-                    punctuation)
+from string import (ascii_lowercase, ascii_uppercase, digits, octdigits)
 from typing import List, cast
 from urllib.parse import parse_qs
 from wsgiref.headers import Headers
 
 HTTP_HEADERS: List[str] = [
     "A_IM",
-    "ACCEPTACCEPT_CHARSETACCEPT_DATETIMEACCEPT_ENCODING",
+    "ACCEPT",
+    "ACCEPT_CHARSET",
+    "ACCEPT_DATETIME",
+    "ACCEPT_ENCODING",
     "ACCEPT_LANGUAGE",
     "ACCESS_CONTROL_REQUEST_METHOD",
     "ACCESS_CONTROL_REQUEST_HEADERS",
@@ -47,7 +49,7 @@ HTTP_HEADERS: List[str] = [
 chars: str = ascii_lowercase + ascii_uppercase + digits + octdigits
 
 
-class Request():
+class Request:
     id: str = ''.join(random.choice(chars) for i in range(30))
     environ: dict
     wsgi_input: BufferedReader
@@ -72,15 +74,28 @@ class Request():
         self.protocol = environ.get('HTTP_PROTOCOL', '')
         self.server_name = environ.get('SERVER_NAME', '')
         self.query = parse_qs(environ.get('QUERY_STRING', ''))
-        for key in environ.keys():
-            replaced_key = key.replace('HTTP_', '')
-            if replaced_key in HTTP_HEADERS:
-                self.headers.add_header(replaced_key, environ.get(key))
+        self._parse_http_headers()
         self._read_request_body()
+
+    def _parse_http_headers(self: 'Request'):
+        for key in self.environ.keys():
+            replaced_key: str = key.replace('HTTP_', '')
+            value = self.environ.get(key)
+
+            if replaced_key in HTTP_HEADERS:
+                final_key : str = ''
+                key_parts = list(map(lambda x: x.capitalize(), replaced_key.split('_')))
+                part_count = len(key_parts)
+                for i in range(part_count):
+                    part = key_parts[i]
+                    final_key += part
+                    if i + 1 < part_count:
+                        final_key += '-'
+            self.headers.add_header(final_key, value)
 
     def _read_request_body(self: 'Request'):
         try:
-            request_body_size = int(self.headers.get('CONTENT_LENGTH', '0'))
-        except (ValueError):
+            request_body_size = int(self.headers.get('Content_Length', '0'))
+        except ValueError:
             request_body_size = 0
         self.raw_body = self.wsgi_input.read(request_body_size)  # returns bytes object

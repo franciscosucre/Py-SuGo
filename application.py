@@ -2,17 +2,17 @@
 from typing import Any, List, Union, Callable
 
 # Third party libs imports
+from wsgiref.simple_server import WSGIServer, make_server
+
+from core import Middleware, RequestHandler
 from request import Request
 from response import Response
 
-NextFunction = Callable[[], Any]
-Middleware = Callable[[Request, Response, NextFunction], Any]
-RequestHandler = Callable[[Request, Response], Any]
 
-
-class Application():
+class Application:
     middlewares: List[Middleware] = list()
     current_layer: int = 0
+    server: WSGIServer
 
     def __init__(self: 'Application', request_handler: RequestHandler):
         self.request_handler = request_handler
@@ -29,8 +29,12 @@ class Application():
             self.current_layer += 1
             layer(request, response, next_layer)
         next_layer()
-        yield str(request.body).encode('utf-8')
-        return request.body
+        yield str(response.body).encode('utf-8')
+        return response.body
 
     def use_middleware(self: 'Application', middleware: Middleware):
         self.middlewares.append(middleware)
+
+    def listen(self, host='localhost', port= 5000):
+        self.server = make_server(host, port, self)
+        self.server.serve_forever()

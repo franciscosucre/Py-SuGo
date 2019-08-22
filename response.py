@@ -7,7 +7,6 @@ from wsgiref.headers import Headers
 # Third party libs imports
 from request import Request
 
-
 class Response():
     id: str
     headers: Headers = Headers()
@@ -25,7 +24,7 @@ class Response():
         return self
 
     def json(self: 'Response', data: Dict):
-        self.headers.add_header('CONTENT_TYPE', 'application/json')
+        self.headers.add_header('Content-Type', 'application/json')
         self.body = data
         http_status = self._get_http_status(self.status_code)
         self._start_response('%d %s' % (http_status.value, http_status.phrase), self.headers.items())
