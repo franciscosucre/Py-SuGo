@@ -4,6 +4,7 @@ Dependencyless WSGI compliant server implemented with python using only the stan
 
 It includes:
 
+- Type Hints
 - Middleware
 - Router
 - Request Body parsing (Json and multiform)
