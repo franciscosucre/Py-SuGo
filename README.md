@@ -1,6 +1,6 @@
 ### PySuGo
 
-Dependencyless WSGI compliant server implemented with python using only the standard library.
+Dependencyless WSGI compliant server implemented with python using only the standard library. It's interface is inspired by ExpressJS.
 
 It includes:
 
@@ -12,3 +12,5 @@ It includes:
 - Request Logging
 - Response Logging
 - Error Handling
+
+In **main.py** we can see an example of a complete Rest API.
