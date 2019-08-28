@@ -26,11 +26,11 @@ class Application:
         response = Response(start_response, request)
 
         def next_layer():
-            if (self.current_layer >= len(self.middlewares)):
+            if self.current_layer >= len(self.middlewares):
                 return self.request_handler(request, response)
             layer = self.middlewares[self.current_layer]
             self.current_layer += 1
-            layer(request, response, next_layer)
+            return layer(request, response, next_layer)
 
         next_layer()
         yield response.body

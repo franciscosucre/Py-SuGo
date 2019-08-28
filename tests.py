@@ -2,7 +2,7 @@
 import json
 import unittest
 from typing import Dict
-from http.client import HTTPResponse, HTTPConnection
+from http.client import HTTPConnection
 
 # Third party libs imports
 from request import Request
@@ -14,8 +14,7 @@ from application import Application
 class ApplicationTests(unittest.TestCase):
     host: str = 'localhost'
     port: int = 50000
-    application : Application
-
+    application: Application
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -36,14 +35,14 @@ class ApplicationTests(unittest.TestCase):
                 "query": request.query,
                 "path": request.path,
             })
+
         return request_handler
 
     @classmethod
-    def http_request(cls, method: str, path: str = '/', body: Dict = dict()):
+    def http_request(cls, method: str, path: str = '/', body: Dict = None):
         connection = HTTPConnection(host=cls.host, port=cls.port)
         connection.request(method=method, url=path, body=body)
         return connection.getresponse()
-
 
     def test_request_path_should_be_set(self):
         response = self.http_request('GET', '/hello')
