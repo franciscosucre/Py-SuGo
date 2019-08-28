@@ -45,7 +45,7 @@ class ApplicationTests(unittest.TestCase):
         return connection.getresponse()
 
 
-    def test_request_id_should_be_set(self):
+    def test_request_path_should_be_set(self):
         response = self.http_request('GET', '/hello')
         response_body: Dict = json.loads(response.read())
         self.assertEqual(response_body.get('path'), '/hello')
