@@ -11,8 +11,7 @@ from http.client import HTTPConnection
 # Third party libs imports
 from request import Request
 from response import Response
-from middleware import (
-    NextFunction, RequestHandler, parse_body_json, parse_body_form_data)
+from middleware import (Middleware, NextFunction, CorsMiddleware, RequestHandler, parse_body_json, parse_body_form_data)
 from application import Application
 
 
@@ -20,10 +19,13 @@ class ServerTestMixin:
     host: str = 'localhost'
     port: int = 50000
     application: Application
+    middleware: List[Middleware] = list()
 
     @classmethod
     def setUpClass(cls) -> None:
         cls.application = Application(cls.get_request_handler())
+        for middleware in cls.middleware:
+            cls.application.use_middleware(middleware)
         cls.application.listen(cls.host, cls.port, True)
 
     @classmethod
@@ -60,13 +62,10 @@ class HttpRequestMixin:
 
     @classmethod
     def get_default_headers(cls, body: bytes):
-        return {
-            "content-length": len(body),
-            "content-type": "plain/text"
-        }
+        return {"content-length": len(body), "content-type": "plain/text"}
 
     @classmethod
-    def http_request(cls, method: str, path: str = '/', headers: Dict=None, body: Any = None, host='localhost', port=50000):
+    def http_request(cls, method: str, path: str = '/', headers: Dict = None, body: Any = None, host='localhost', port=50000):
         connection = HTTPConnection(host=host, port=port)
         byte_body = cls.convert_body_to_bytes(body)
         final_headers = cls.get_default_headers(byte_body)
@@ -202,7 +201,7 @@ class ParseBodyFormDataTestCase(HttpRequestMixin, TestCase):
         super().tearDown()
         self.file.close()
 
-    def encode_multipart_formdata(self,fields: Dict[str, Any], files: Dict[str, TextIO]) :
+    def encode_multipart_formdata(self, fields: Dict[str, Any], files: Dict[str, TextIO]):
         '''
         Build a multipart/form-data body with generated random boundary.
         '''
@@ -230,6 +229,7 @@ class ParseBodyFormDataTestCase(HttpRequestMixin, TestCase):
 
     def test_should_not_parse_anything_if_content_type_is_not_json(self):
         body, boundary = self.encode_multipart_formdata(fields={"field": True}, files={"file": self.file})
+
         def handler(request: Request, response: Response):
             self.assertEqual(len(request.body.keys()), 0)
             self.assertEqual(request.raw_body, body.encode('utf-8'))
@@ -252,28 +252,50 @@ class ParseBodyFormDataTestCase(HttpRequestMixin, TestCase):
             self.assertEqual(request.body['fields']['field'], 'True')
             self.assertEqual(request.body['files']['file'].filename, self.file.name)
             return response.json({})
+
         port = self.port + 1
         application = Application(handler)
         application.use_middleware(parse_body_form_data)
         application.listen(port=port, parallel=True)
 
-        response = self.http_request(
-            method='POST',
-            path='/',
-            body=body,
-            headers={"content-type": 'multipart/form-data; boundary=%s' % boundary},
-            port=port
-        )
+        response = self.http_request(method='POST',
+                                     path='/',
+                                     body=body,
+                                     headers={"content-type": 'multipart/form-data; boundary=%s' % boundary},
+                                     port=port)
         application.close()
         sleep(1)
         self.assertEqual(response.status, 200)
 
+
 class CorsTestCase(ServerTestMixin, HttpRequestMixin, TestCase):
-    pass
+    port = 50008
+    middleware = [CorsMiddleware.get_handler()]
+
+    @classmethod
+    def get_request_handler(cls) -> RequestHandler:
+        def handler(request: Request, response: Response):
+            body = dict()
+            for (key, value) in request.headers.items():
+                body[key] = value
+            return response.json(body)
+
+        return handler
+
+    def test_should_add_cors_headers(self):
+        response = self.http_request(method='GET', path='/', port=self.port)
+        body = json.loads(response.read())
+        self.assertEqual(response.status, 200)
+        self.assertEqual(body.get('access-control-allow-credentials'), CorsMiddleware.access_control_allow_credentials)
+        self.assertEqual(body.get('access-control-allow-headers'), CorsMiddleware.access_control_allow_headers)
+        self.assertEqual(body.get('access-control-allow-methods'), CorsMiddleware.access_control_allow_methods)
+        self.assertEqual(body.get('access-control-allow-origin'), CorsMiddleware.access_control_allow_origin)
+        self.assertEqual(body.get('access-control-expose-headers'), CorsMiddleware.access_control_expose_headers)
+        self.assertEqual(body.get('access-control-max-age'), CorsMiddleware.access_control_max_age)
 
 
 class HttpClientTestCase(TestCase, ServerTestMixin):
-    port: int = 50006
+    port: int = 50009
 
 
 class RouterTestCase(TestCase):
