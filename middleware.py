@@ -34,16 +34,18 @@ def parse_body_form_data(request: Request, response: Response, next_layer: NextF
         form_data: cgi.FieldStorage = cgi.FieldStorage(fp=io.BytesIO(request.raw_body), environ=request.environ, keep_blank_values=True)
         assert form_data.list is not None
         field_storages: List[cgi.FieldStorage] = form_data.list
-        files: List[FileData] = list()
+        keys = form_data.keys()
+        files: Dict[str, FileData] = dict()
         fields: Dict[str, Any] = dict()
 
         for element in field_storages:
-            name: str = form_data.disposition_options.get('name', '')
+            name: str = element.disposition_options.get('name', '')
             value: Any = form_data.getvalue(name)
             if element.filename:
-                files.append(FileData(value, element.filename, element.type))
+                files[name] = FileData(value, element.filename, element.type)
             else:
                 fields[name] = value
+
         request.body['files'] = files
         request.body['fields'] = fields
 
@@ -108,12 +110,12 @@ def log_response(request: Request, response: Response, next_layer: NextFunction)
 
 
 class CorsMiddleware:
-    access_control_allow_credentials= True
-    access_control_allow_headers= '',
-    access_control_allow_methods= 'GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS',
-    access_control_allow_origin= '*',
-    access_control_expose_headers= 'authorization'
-    access_control_max_age= '2592000'
+    access_control_allow_credentials = True
+    access_control_allow_headers = '',
+    access_control_allow_methods = 'GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS',
+    access_control_allow_origin = '*',
+    access_control_expose_headers = 'authorization'
+    access_control_max_age = '2592000'
 
     @classmethod
     def get_handler(cls):
@@ -127,5 +129,5 @@ class CorsMiddleware:
             request.headers.add_header('', middleware.access_control_expose_headers)
             request.headers.add_header('', middleware.access_control_max_age)
             return next_layer()
-        return fn
 
+        return fn

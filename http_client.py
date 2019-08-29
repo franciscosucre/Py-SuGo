@@ -1,7 +1,8 @@
 # Standard libs imports
 import json
+import time
 import mimetypes
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union, TextIO
 from http.client import HTTPConnection
 from urllib.parse import urlparse
 from wsgiref.headers import Headers
@@ -72,28 +73,24 @@ class HttpClient:
     def get_content_type(self, filename: str) -> str:
         return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
 
-    def encode_multipart_formdata(self, fields, files) -> Tuple[str, str]:
-        """
-        fields is a sequence of (name, value) elements for regular form fields.
-        files is a sequence of (name, filename, value) elements for data to be uploaded as files
-        Return (content_type, body) ready for httplib.HTTP instance
-        """
-        BOUNDARY = '----------ThIs_Is_tHe_bouNdaRY_$'
-        CRLF = '\r\n'
-        L = []
-        for (key, value) in fields:
-            L.append('--' + BOUNDARY)
-            L.append('Content-Disposition: form-data; name="%s"' % key)
-            L.append('')
-            L.append(value)
-        for (key, filename, value) in files:
-            L.append('--' + BOUNDARY)
-            L.append('Content-Disposition: form-data; name="%s"; filename="%s"' % (key, filename))
-            L.append('Content-Type: %s' % self.get_content_type(filename))
-            L.append('')
-            L.append(value)
-        L.append('--' + BOUNDARY + '--')
-        L.append('')
-        body = CRLF.join(L)
-        content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
-        return content_type, body
+    def encode_multipart_formdata(self, fields: Dict[str, Any], files: List[TextIO]):
+        boundary = '----------%s' % hex(int(time.time() * 1000))
+        data: List[str] = []
+        for k, v in fields.items():
+            data.append('--%s' % boundary)
+            data.append('Content-Disposition: form-data; name="%s"\r\n' % k)
+            if isinstance(v, str):
+                data.append(v)
+            elif isinstance(v, bytes):
+                data.append(v.decode('utf-8'))
+            else:
+                data.append(str(v))
+
+        for file in files:
+            content = file.read()
+            data.append('Content-Disposition: form-data; name="%s"; filename="hidden"' % k)
+            data.append('Content-Length: %d' % len(content))
+            data.append('Content-Type: %s\r\n' % self.get_content_type(file.name.lower()))
+            data.append(content)
+        data.append('--%s--\r\n' % boundary)
+        return '\r\n'.join(data), boundary

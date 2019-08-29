@@ -1,15 +1,18 @@
 # Standard libs imports
 import json
+import time
 import unittest
+import mimetypes
 from time import sleep
-from typing import Any, Dict, cast
+from typing import Any, Dict, List, Tuple, TextIO, cast
 from unittest import TestCase
 from http.client import HTTPConnection
 
 # Third party libs imports
 from request import Request
 from response import Response
-from middleware import NextFunction, RequestHandler, parse_body_json
+from middleware import (
+    NextFunction, RequestHandler, parse_body_json, parse_body_form_data)
 from application import Application
 
 
@@ -56,9 +59,20 @@ class HttpRequestMixin:
         return cast(bytes, body)
 
     @classmethod
-    def http_request(cls, method: str, path: str = '/', headers=dict(), body: Any = None, host='localhost', port=50000):
+    def get_default_headers(cls, body: bytes):
+        return {
+            "content-length": len(body),
+            "content-type": "plain/text"
+        }
+
+    @classmethod
+    def http_request(cls, method: str, path: str = '/', headers: Dict=None, body: Any = None, host='localhost', port=50000):
         connection = HTTPConnection(host=host, port=port)
-        connection.request(method=method, url=path, body=cls.convert_body_to_bytes(body), headers=headers)
+        byte_body = cls.convert_body_to_bytes(body)
+        final_headers = cls.get_default_headers(byte_body)
+        if headers:
+            final_headers.update(headers)
+        connection.request(method=method, url=path, body=byte_body, headers=final_headers)
         return connection.getresponse()
 
 
@@ -173,9 +187,86 @@ class ParseBodyJsonTestCase(HttpRequestMixin, TestCase):
         self.assertEqual(response.status, 200)
 
 
-class ParseBodyFormDataTestCase(TestCase, ServerTestMixin):
+class ParseBodyFormDataTestCase(HttpRequestMixin, TestCase):
     port: int = 50006
+    file: TextIO
 
+    def get_content_type(self, filename: str) -> str:
+        return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.file = open('README.md', 'r')
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        self.file.close()
+
+    def encode_multipart_formdata(self,fields: Dict[str, Any], files: Dict[str, TextIO]) :
+        '''
+        Build a multipart/form-data body with generated random boundary.
+        '''
+        boundary = '----------%s' % hex(int(time.time() * 1000))
+        data: List[str] = []
+        for key, value in fields.items():
+            data.append('--%s' % boundary)
+            data.append('Content-Disposition: form-data; name="%s"\r\n' % key)
+            if isinstance(value, str):
+                data.append(value)
+            elif isinstance(value, bytes):
+                data.append(value.decode('utf-8'))
+            else:
+                data.append(str(value))
+
+        for key, file in files.items():
+            data.append('--%s' % boundary)
+            content = file.read()
+            data.append('Content-Disposition: form-data; name="%s"; filename="%s"' % (key, file.name))
+            data.append('Content-Length: %d' % len(content))
+            data.append('Content-Type: %s\r\n' % self.get_content_type(file.name.lower()))
+            data.append(content)
+        data.append('--%s--\r\n' % boundary)
+        return '\r\n'.join(data), boundary
+
+    def test_should_not_parse_anything_if_content_type_is_not_json(self):
+        body, boundary = self.encode_multipart_formdata(fields={"field": True}, files={"file": self.file})
+        def handler(request: Request, response: Response):
+            self.assertEqual(len(request.body.keys()), 0)
+            self.assertEqual(request.raw_body, body.encode('utf-8'))
+            return response.json({})
+
+        application = Application(handler)
+        application.use_middleware(parse_body_form_data)
+        application.listen(port=self.port, parallel=True)
+
+        response = self.http_request('POST', '/', body=body, headers={"content-type": "plain/text"}, port=self.port)
+        application.close()
+        sleep(1)
+        self.assertEqual(response.status, 200)
+
+    def test_should_parse_if_content_type_is_json(self):
+        body, boundary = self.encode_multipart_formdata(fields={"field": True}, files={"file": self.file})
+
+        def handler(request: Request, response: Response):
+            self.assertTrue(isinstance(request.body, dict))
+            self.assertEqual(request.body['fields']['field'], 'True')
+            self.assertEqual(request.body['files']['file'].filename, self.file.name)
+            return response.json({})
+        port = self.port + 1
+        application = Application(handler)
+        application.use_middleware(parse_body_form_data)
+        application.listen(port=port, parallel=True)
+
+        response = self.http_request(
+            method='POST',
+            path='/',
+            body=body,
+            headers={"content-type": 'multipart/form-data; boundary=%s' % boundary},
+            port=port
+        )
+        application.close()
+        sleep(1)
+        self.assertEqual(response.status, 200)
 
 class CorsTestCase(ServerTestMixin, HttpRequestMixin, TestCase):
     pass
