@@ -1,13 +1,12 @@
 # Standard libs imports
 import random
 from io import BufferedReader
-from string import digits, octdigits, ascii_lowercase, ascii_uppercase
+from string import digits, octdigits, ascii_lowercase, ascii_uppercase, capwords
 from typing import Any, Dict, List, cast
 from urllib.parse import parse_qs
 from wsgiref.headers import Headers
 
-# Third party libs imports
-from core import HttpHeader
+from core import CONTENT_LENGTH
 
 HTTP_HEADERS: List[str] = [
     "A_IM",
@@ -91,19 +90,12 @@ class Request:
             value = self.environ.get(key)
 
             if replaced_key in HTTP_HEADERS:
-                final_key : str = ''
-                key_parts = list(map(lambda x: x.capitalize(), replaced_key.split('_')))
-                part_count = len(key_parts)
-                for i in range(part_count):
-                    part = key_parts[i]
-                    final_key += part
-                    if i + 1 < part_count:
-                        final_key += '-'
+                final_key : str = capwords(replaced_key, '_').replace('_', '-')
                 self.headers.add_header(final_key, value)
 
     def _read_request_body(self: 'Request'):
         try:
-            request_body_size = int(self.headers.get(HttpHeader.CONTENT_LENGTH.value, '0'))
+            request_body_size = int(self.headers.get(CONTENT_LENGTH, '0'))
         except ValueError:
             request_body_size = 0
         self.raw_body = self.wsgi_input.read(request_body_size)

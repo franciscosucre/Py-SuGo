@@ -5,7 +5,7 @@ from typing import Any, Dict
 from wsgiref.headers import Headers
 
 # Third party libs imports
-from core import HttpHeader
+from core import CONTENT_TYPE, CONTENT_LENGTH
 from request import Request
 
 
@@ -31,8 +31,8 @@ class Response:
         http_status = self._get_http_status(self.status_code)
         string_body: str = json.dumps(data)
         self.body = bytes(string_body, 'utf-8')
-        self.headers.add_header(HttpHeader.CONTENT_TYPE.value, 'application/json')
-        self.headers.add_header(HttpHeader.CONTENT_LENGTH.value, str(len(self.body)))
+        self.headers.add_header(CONTENT_TYPE, 'application/json')
+        self.headers.add_header(CONTENT_LENGTH, str(len(self.body)))
         self._start_response('%d %s' % (http_status.value, http_status.phrase), self.headers.items())
         return self.body
 

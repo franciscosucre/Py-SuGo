@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Callable
 from datetime import datetime
 
 # Third party libs imports
-from core import HttpHeader
+from core import CONTENT_TYPE
 from request import Request
 from response import Response
 
@@ -27,7 +27,7 @@ class FileData():
 
 
 def parse_body_form_data(request: Request, response: Response, next_layer: NextFunction):
-    content_type = request.headers.get(HttpHeader.CONTENT_TYPE.value)
+    content_type = request.headers.get(CONTENT_TYPE)
     assert content_type is not None
     is_form_data = content_type.find('multipart/form-data') >= 0
     if is_form_data:
@@ -53,8 +53,8 @@ def parse_body_form_data(request: Request, response: Response, next_layer: NextF
 
 
 def parse_body_json(request: Request, response: Response, next_layer: NextFunction):
-    content_type: str = request.headers.get('Content-Type', '')
-    if content_type.find('application/json') >= 0:
+    content_type: str = request.headers.get(CONTENT_TYPE, '')
+    if content_type.find('application/json') >= 0 and request.raw_body:
         request.body = json.loads(request.raw_body)
     return next_layer()
 

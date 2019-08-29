@@ -9,10 +9,14 @@ from unittest import TestCase
 from http.client import HTTPConnection
 
 # Third party libs imports
+from core import GET, PUT, HEAD, POST, PATCH, DELETE, OPTIONS
 from request import Request
 from response import Response
-from middleware import (Middleware, NextFunction, CorsMiddleware, RequestHandler, parse_body_json, parse_body_form_data)
+from middleware import (
+    Middleware, NextFunction, CorsMiddleware, RequestHandler, parse_body_json,
+    parse_body_form_data)
 from application import Application
+from http_client import HttpClient, HttpResponse
 
 
 class ServerTestMixin:
@@ -294,8 +298,51 @@ class CorsTestCase(ServerTestMixin, HttpRequestMixin, TestCase):
         self.assertEqual(body.get('access-control-max-age'), CorsMiddleware.access_control_max_age)
 
 
-class HttpClientTestCase(TestCase, ServerTestMixin):
+class HttpClientTestCase(ServerTestMixin, TestCase):
     port: int = 50009
+    http_client: HttpClient
+    middleware: List[Middleware] = [parse_body_json]
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.http_client = HttpClient(default_headers={'content-type': 'application/json'}, base_url='http://localhost:%d' % cls.port)
+
+    def test_should_make_a_get_request(self):
+        response: HttpResponse = self.http_client.get(path='/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['method'], GET)
+
+    def test_should_make_a_delete_request(self):
+        response: HttpResponse = self.http_client.delete(path='/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['method'], DELETE)
+
+    def test_should_make_a_head_request(self):
+        response: HttpResponse = self.http_client.head(path='/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_should_make_a_options_request(self):
+        response: HttpResponse = self.http_client.head(path='/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_should_make_a_post_request(self):
+        response: HttpResponse = self.http_client.post(path='/', body={"hello": True})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['method'], POST)
+        self.assertEqual(response.data['body']['hello'], True)
+
+    def test_should_make_a_put_request(self):
+        response: HttpResponse = self.http_client.put(path='/', body={"hello": True})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['method'], PUT)
+        self.assertEqual(response.data['body']['hello'], True)
+
+    def test_should_make_a_patch_request(self):
+        response: HttpResponse = self.http_client.patch(path='/', body={"hello": True})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['method'], PATCH)
+        self.assertEqual(response.data['body']['hello'], True)
 
 
 class RouterTestCase(TestCase):

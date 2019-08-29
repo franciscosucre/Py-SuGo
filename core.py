@@ -1,17 +1,17 @@
-# Standard libs imports
-from enum import Enum
+
+GET = 'GET'
+POST = 'POST'
+PUT = 'PUT'
+PATCH = 'PATCH'
+DELETE = 'DELETE'
+HEAD = 'HEAD'
+OPTIONS = 'OPTIONS'
 
 
-class HttpMethod(Enum):
-    GET = 'GET'
-    POST = 'POST'
-    PUT = 'PUT'
-    PATCH = 'PATCH'
-    DELETE = 'DELETE'
-    HEAD = 'HEAD'
-    OPTIONS = 'OPTIONS'
+CONTENT_TYPE = 'Content-Type'
+CONTENT_LENGTH = 'Content-Length'
 
+UTF_8: str = 'utf-8'
 
-class HttpHeader(Enum):
-    CONTENT_TYPE = 'Content-Type'
-    CONTENT_LENGTH = 'Content-Length'
+CONTENT_TYPE = 'Content-Type'
+CONTENT_LENGTH = 'Content-Length'
