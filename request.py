@@ -1,11 +1,12 @@
 # Standard libs imports
 import random
 from io import BufferedReader
-from string import digits, octdigits, ascii_lowercase, ascii_uppercase, capwords
+from string import digits, capwords, octdigits, ascii_lowercase, ascii_uppercase
 from typing import Any, Dict, List, cast
 from urllib.parse import parse_qs
 from wsgiref.headers import Headers
 
+# Third party libs imports
 from core import CONTENT_LENGTH
 
 HTTP_HEADERS: List[str] = [
@@ -90,7 +91,7 @@ class Request:
             value = self.environ.get(key)
 
             if replaced_key in HTTP_HEADERS:
-                final_key : str = capwords(replaced_key, '_').replace('_', '-')
+                final_key: str = capwords(replaced_key, '_').replace('_', '-')
                 self.headers.add_header(final_key, value)
 
     def _read_request_body(self: 'Request'):

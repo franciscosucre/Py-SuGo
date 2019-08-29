@@ -3,7 +3,7 @@ import re
 from typing import List, Union, Pattern
 
 # Third party libs imports
-from core import HttpMethod
+from core import GET, PUT, HEAD, POST, PATCH, DELETE, OPTIONS
 from request import Request
 from response import Response
 from application import Middleware, RequestHandler
@@ -56,6 +56,7 @@ class Route:
         match = self.regex.match(request.path)
         assert match is not None
         request.params = match.groupdict()
+
         def next_layer():
             layer = self.layers[self.current_layer]
             self.current_layer += 1
@@ -70,7 +71,7 @@ class Route:
 class Router:
     routes: List[Route] = list()
 
-    def add_route(self: 'Router', method: str, url_pattern: str, first_handler: Handler, *handlers: Handler):
+    def add_route(self: 'Router', method: str, url_pattern: str, first_handler: Handler, *handlers: Handler) -> 'Router':
         matches = [r for r in self.routes if r.method == method and r.url_pattern == url_pattern]
         if matches:
             raise RouteAlreadyExistsException(method, url_pattern)
@@ -78,33 +79,26 @@ class Router:
         self.routes.append(route)
         return self
 
-    def get(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.GET.value, url_pattern, first_handler, *handlers)
-        return self
+    def get(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler) -> 'Router':
+        return self.add_route(GET, url_pattern, first_handler, *handlers)
 
-    def post(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
-        return self
+    def post(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler) -> 'Router':
+        return self.add_route(POST, url_pattern, first_handler, *handlers)
 
-    def put(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
-        return self
+    def put(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler) -> 'Router':
+        return self.add_route(PUT, url_pattern, first_handler, *handlers)
 
-    def patch(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
-        return self
+    def patch(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler) -> 'Router':
+        return self.add_route(PATCH, url_pattern, first_handler, *handlers)
 
-    def delete(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
-        return self
+    def delete(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler) -> 'Router':
+        return self.add_route(DELETE, url_pattern, first_handler, *handlers)
 
-    def head(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
-        return self
+    def head(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler) -> 'Router':
+        return self.add_route(HEAD, url_pattern, first_handler, *handlers)
 
-    def options(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler):
-        self.add_route(HttpMethod.POST.value, url_pattern, first_handler, *handlers)
-        return self
+    def options(self: 'Router', url_pattern: str, first_handler: Handler, *handlers: Handler) -> 'Router':
+        return self.add_route(OPTIONS, url_pattern, first_handler, *handlers)
 
     def find_route(self: 'Router', method: str, url: str) -> Route:
         # We make a search by method first to limit the choices for the regex filter, that is more resource consuming

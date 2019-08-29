@@ -3,18 +3,21 @@ import json
 import time
 import mimetypes
 from typing import Any, Dict, List, Tuple, Union, TextIO, cast
-from http.client import HTTPConnection, HTTPResponse
+from http.client import HTTPResponse, HTTPConnection
 from urllib.parse import urlparse
 from wsgiref.headers import Headers
 
-from core import UTF_8, CONTENT_TYPE, CONTENT_LENGTH, POST, PATCH, PUT, DELETE, OPTIONS, HEAD, GET
+# Third party libs imports
+from core import (
+    GET, PUT, HEAD, POST, PATCH, UTF_8, DELETE, OPTIONS, CONTENT_TYPE,
+    CONTENT_LENGTH)
 
 
 class HttpResponse:
     status_code: int
     data: Union[Dict, bytes]
     header: Headers
-    message:str
+    message: str
     url: str
 
     def __init__(self, status_code: int, headers: Headers, message: str, url: str, data: Dict = None):
@@ -44,7 +47,7 @@ class HttpClient:
         url_elements = urlparse(complete_url)
         connection = HTTPConnection(host=url_elements.hostname, port=url_elements.port)
         combined_headers = self.default_headers.copy()
-        byte_body : bytes = ''.encode(UTF_8)
+        byte_body: bytes = ''.encode(UTF_8)
         if files or fields:
             byte_body, boundary = self.encode_multipart_formdata(files=files if files else dict(), fields=fields if fields else dict())
             combined_headers[CONTENT_TYPE] = 'multipart/form-data; boundary=%s' % boundary
@@ -73,7 +76,8 @@ class HttpClient:
     def post(self, path: str, headers: Dict = None, body: Any = None, fields: Dict[str, Any] = None, files: Dict[str, TextIO] = None) -> HttpResponse:
         return self.http_request(POST, path=path, headers=headers, body=body, fields=fields, files=files)
 
-    def patch(self, path: str, headers: Dict = None, body: Any = None, fields: Dict[str, Any] = None, files: Dict[str, TextIO] = None) -> HttpResponse:
+    def patch(self, path: str, headers: Dict = None, body: Any = None, fields: Dict[str, Any] = None,
+              files: Dict[str, TextIO] = None) -> HttpResponse:
         return self.http_request(PATCH, path=path, headers=headers, body=body, fields=fields, files=files)
 
     def put(self, path: str, headers: Dict = None, body: Any = None, fields: Dict[str, Any] = None, files: Dict[str, TextIO] = None) -> HttpResponse:
