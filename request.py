@@ -63,13 +63,13 @@ class Request:
     server_name: str
     query: dict
     headers: Headers
-    body: dict
+    body: Dict
     raw_body: bytes
     params: Dict[str, Any]
 
     def __init__(self, environ: dict):
         self.id = ''.join(random.choice(chars) for i in range(30))
-        self.body = None
+        self.body = dict()
         self.environ = environ
         self.wsgi_input: BufferedReader = cast(BufferedReader, environ.get('wsgi.input'))
         self.path = environ.get('PATH_INFO', '')
@@ -105,4 +105,4 @@ class Request:
             request_body_size = int(self.headers.get(HttpHeader.CONTENT_LENGTH.value, '0'))
         except ValueError:
             request_body_size = 0
-        self.raw_body = self.wsgi_input.read(request_body_size)  # returns bytes object
+        self.raw_body = self.wsgi_input.read(request_body_size)

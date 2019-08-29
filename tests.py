@@ -2,16 +2,14 @@
 import json
 import unittest
 from time import sleep
-from typing import Dict, Any
+from typing import Any, Dict, cast
+from unittest import TestCase
 from http.client import HTTPConnection
 
 # Third party libs imports
-from unittest import TestCase
-from urllib import parse
-
 from request import Request
 from response import Response
-from middleware import RequestHandler, NextFunction, parse_body_json
+from middleware import NextFunction, RequestHandler, parse_body_json
 from application import Application
 
 
@@ -29,7 +27,6 @@ class ServerTestMixin:
     def tearDownClass(cls) -> None:
         cls.application.close()
 
-
     @classmethod
     def get_request_handler(cls) -> RequestHandler:
         def request_handler(request: Request, response: Response):
@@ -40,6 +37,7 @@ class ServerTestMixin:
                 "query": request.query,
                 "path": request.path,
             })
+
         return request_handler
 
 
@@ -48,15 +46,24 @@ class HttpRequestMixin:
     port: int = 50000
 
     @classmethod
+    def convert_body_to_bytes(cls, body: Any) -> bytes:
+        if isinstance(body, dict):
+            return json.dumps(body).encode('utf-8')
+        elif isinstance(body, str):
+            return body.encode('utf-8')
+        elif body is None:
+            return ''.encode('utf-8')
+        return cast(bytes, body)
+
+    @classmethod
     def http_request(cls, method: str, path: str = '/', headers=dict(), body: Any = None, host='localhost', port=50000):
         connection = HTTPConnection(host=host, port=port)
-        connection.request(method=method, url=path, body=body, headers=headers)
+        connection.request(method=method, url=path, body=cls.convert_body_to_bytes(body), headers=headers)
         return connection.getresponse()
 
 
 class RequestTestCase(ServerTestMixin, HttpRequestMixin, TestCase):
-
-    def test_request_path_should_be_set(self):
+    def test_request_id_should_be_set(self):
         response = self.http_request('GET', '/hello')
         response_body: Dict = json.loads(response.read())
         self.assertIsNotNone(response_body.get('id'))
@@ -67,7 +74,7 @@ class RequestTestCase(ServerTestMixin, HttpRequestMixin, TestCase):
         self.assertEqual(response_body.get('path'), '/hello')
 
 
-class ResponseTestCase(ServerTestMixin, HttpRequestMixin, TestCase ):
+class ResponseTestCase(ServerTestMixin, HttpRequestMixin, TestCase):
     port: int = 50001
 
     @classmethod
@@ -88,24 +95,26 @@ class ResponseTestCase(ServerTestMixin, HttpRequestMixin, TestCase ):
 
 
 class MiddlewareTestCase(HttpRequestMixin, TestCase):
-
     def get_first_middleware(self):
-        def first_middleware(request: Request, response: Response, next: NextFunction):
+        def first_middleware(request: Request, response: Response, next_layer: NextFunction):
             request.body = dict()
             request.body['first'] = True
-            next()
+            next_layer()
+
         return first_middleware
 
     def get_second_middleware(self):
-        def second_middleware(request: Request, response: Response, next: NextFunction):
+        def second_middleware(request: Request, response: Response, next_layer: NextFunction):
             request.body['second'] = True
-            next()
+            next_layer()
             self.assertEqual(request.body['handler'], True)
+
         return second_middleware
 
     def test_should_run_added_middleware(self):
         def request_handler(request: Request, response: Response):
             return response.status(201).json(request.body)
+
         app = Application(request_handler)
         app.use_middleware(self.get_first_middleware())
         app.listen(port=50002, parallel=True)
@@ -133,35 +142,38 @@ class MiddlewareTestCase(HttpRequestMixin, TestCase):
 
 class ParseBodyJsonTestCase(HttpRequestMixin, TestCase):
     port: int = 50004
+    body: Dict = {"hello": 1}
 
     def test_should_not_parse_anything_if_content_type_is_not_json(self):
         def handler(request: Request, response: Response):
-            self.assertTrue(isinstance(request.body, str))
+            self.assertEqual(len(request.body.keys()), 0)
+            self.assertEqual(request.raw_body, json.dumps(self.body).encode('utf-8'))
             return response.json({})
+
         application = Application(handler)
         application.use_middleware(parse_body_json)
         application.listen(port=self.port, parallel=True)
-        response = self.http_request('POST', '/', body="{ hello: 1 }", headers={ "content-type": "plain/text"  }, port=self.port)
+        response = self.http_request('POST', '/', body=self.body, headers={"content-type": "plain/text"}, port=self.port)
         application.close()
         sleep(1)
         self.assertEqual(response.status, 200)
 
     def test_should_parse_if_content_type_is_json(self):
-
-
         def handler(request: Request, response: Response):
             self.assertTrue(isinstance(request.body, dict))
             return response.json({})
 
+        port = self.port + 1
         application = Application(handler)
         application.use_middleware(parse_body_json)
-        response = self.http_request('POST', '/', body="{ hello: 1 }", headers={ "content-type": "application/json"  }, port=self.port)
+        application.listen(port=port, parallel=True)
+        response = self.http_request(method='POST', path='/', body=self.body, headers={"content-type": "application/json"}, port=port)
         application.close()
         sleep(1)
         self.assertEqual(response.status, 200)
 
 
-class ParseBodyFormDataTestCasa(TestCase, ServerTestMixin):
+class ParseBodyFormDataTestCase(TestCase, ServerTestMixin):
     port: int = 50005
 
 
@@ -175,7 +187,6 @@ class HttpClientTestCase(TestCase, ServerTestMixin):
 
 class RouterTestCase(TestCase):
     pass
-
 
 
 if __name__ == '__main__':
