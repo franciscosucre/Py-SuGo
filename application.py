@@ -12,12 +12,14 @@ from server import PySuGoServer
 
 
 class Application:
-    middlewares: List[Middleware] = list()
-    current_layer: int = 0
+    middlewares: List[Middleware]
+    current_layer: int
     server: WSGIServer
     server_thread: Thread
 
     def __init__(self: 'Application', request_handler: RequestHandler):
+        self.middlewares = list()
+        self.current_layer = 0
         self.request_handler = request_handler
 
     def __call__(self: 'Application', environ, start_response):

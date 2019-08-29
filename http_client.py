@@ -1,8 +1,8 @@
 # Standard libs imports
 import json
 import mimetypes
-from typing import Any, Dict, List, Union, Callable
-from http.client import HTTPResponse, HTTPConnection
+from typing import Any, Dict, Union, Tuple
+from http.client import HTTPConnection
 from urllib.parse import urlparse
 from wsgiref.headers import Headers
 
@@ -48,31 +48,31 @@ class HttpClient:
                                 data=response_body)
         return response
 
-    def get(self, path: str, headers: Dict = default_headers):
+    def get(self, path: str, headers: Dict = default_headers) -> HttpResponse:
         return self.http_request('GET', path, headers, None)
 
-    def post(self, path: str, headers: Dict = default_headers, body: Any = None):
+    def post(self, path: str, headers: Dict = default_headers, body: Any = None) -> HttpResponse:
         return self.http_request('POST', path, headers, body)
 
-    def patch(self, path: str, headers: Dict = default_headers, body: Any = None):
+    def patch(self, path: str, headers: Dict = default_headers, body: Any = None) -> HttpResponse:
         return self.http_request('PATCH', path, headers, body)
 
-    def put(self, path: str, headers: Dict = default_headers, body: Any = None):
+    def put(self, path: str, headers: Dict = default_headers, body: Any = None) -> HttpResponse:
         return self.http_request('PUT', path, headers, body)
 
-    def delete(self, path: str, headers: Dict = default_headers):
+    def delete(self, path: str, headers: Dict = default_headers) -> HttpResponse:
         return self.http_request('DELETE', path, headers, None)
 
-    def options(self, path: str, headers: Dict = default_headers):
+    def options(self, path: str, headers: Dict = default_headers) -> HttpResponse:
         return self.http_request('OPTIONS', path, headers, None)
 
-    def head(self, path: str, headers: Dict = default_headers):
+    def head(self, path: str, headers: Dict = default_headers) -> HttpResponse:
         return self.http_request('HEAD', path, headers, None)
 
     def get_content_type(self, filename: str) -> str:
         return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
 
-    def encode_multipart_formdata(self, fields, files):
+    def encode_multipart_formdata(self, fields, files) -> Tuple[str, str]:
         """
         fields is a sequence of (name, value) elements for regular form fields.
         files is a sequence of (name, filename, value) elements for data to be uploaded as files

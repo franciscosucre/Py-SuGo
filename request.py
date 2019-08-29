@@ -52,7 +52,7 @@ chars: str = ascii_lowercase + ascii_uppercase + digits + octdigits
 
 
 class Request:
-    id: str = ''.join(random.choice(chars) for i in range(30))
+    id: str
     environ: dict
     wsgi_input: BufferedReader
     path: str
@@ -62,12 +62,14 @@ class Request:
     protocol: str
     server_name: str
     query: dict
-    headers: Headers = Headers()
-    body: dict = dict()
+    headers: Headers
+    body: dict
     raw_body: bytes
-    params: Dict[str, Any] = dict()
+    params: Dict[str, Any]
 
     def __init__(self, environ: dict):
+        self.id = ''.join(random.choice(chars) for i in range(30))
+        self.body = None
         self.environ = environ
         self.wsgi_input: BufferedReader = cast(BufferedReader, environ.get('wsgi.input'))
         self.path = environ.get('PATH_INFO', '')
@@ -77,6 +79,8 @@ class Request:
         self.protocol = environ.get('HTTP_PROTOCOL', '')
         self.server_name = environ.get('SERVER_NAME', '')
         self.query = parse_qs(environ.get('QUERY_STRING', ''))
+        self.params = dict()
+        self.headers = Headers()
         self._parse_http_headers()
         self._read_request_body()
 

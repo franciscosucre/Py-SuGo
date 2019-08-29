@@ -51,7 +51,7 @@ def parse_body_form_data(request: Request, response: Response, next_layer: NextF
 
 
 def parse_body_json(request: Request, response: Response, next_layer: NextFunction):
-    content_type: str = request.headers.get('CONTENT_TYPE', '')
+    content_type: str = request.headers.get('Content-Type', '')
     if content_type.find('application/json') >= 0:
         request.body = json.loads(request.raw_body)
     return next_layer()

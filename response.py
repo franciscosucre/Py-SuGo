@@ -8,17 +8,20 @@ from wsgiref.headers import Headers
 from core import HttpHeader
 from request import Request
 
-class Response():
+
+class Response:
     id: str
-    headers: Headers = Headers()
+    headers: Headers
     request: Request
-    status_code: int = 200
-    body: Any = dict()
+    status_code: int
+    body: bytes
 
     def __init__(self: 'Response', start_response, request: Request):
         self.request = request
         self.id = request.id
         self._start_response = start_response
+        self.headers = Headers()
+        self.status_code = 200
 
     def status(self: 'Response', status_code: int) -> 'Response':
         self.status_code = status_code
