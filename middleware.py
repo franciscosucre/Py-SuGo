@@ -105,3 +105,27 @@ def log_response(request: Request, response: Response, next_layer: NextFunction)
     now = datetime.now().isoformat()
     logger.info(log_format, now, req_id, method, path, status_code, body)
     return
+
+
+class CorsMiddleware:
+    access_control_allow_credentials= True
+    access_control_allow_headers= '',
+    access_control_allow_methods= 'GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS',
+    access_control_allow_origin= '*',
+    access_control_expose_headers= 'authorization'
+    access_control_max_age= '2592000'
+
+    @classmethod
+    def get_handler(cls):
+        middleware = CorsMiddleware()
+
+        def fn(request: Request, response: Response, next_layer: NextFunction):
+            request.headers.add_header('', middleware.access_control_allow_credentials)
+            request.headers.add_header('', middleware.access_control_allow_headers)
+            request.headers.add_header('', middleware.access_control_allow_methods)
+            request.headers.add_header('', middleware.access_control_allow_origin)
+            request.headers.add_header('', middleware.access_control_expose_headers)
+            request.headers.add_header('', middleware.access_control_max_age)
+            return next_layer()
+        return fn
+
