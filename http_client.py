@@ -39,15 +39,18 @@ class HttpClient:
                      headers: Dict = None,
                      body: Any = None,
                      fields: Dict[str, Any] = None,
-                     files: List[TextIO] = None) -> HttpResponse:
+                     files: Dict[str, TextIO] = None) -> HttpResponse:
         complete_url = self.base_url + path
         url_elements = urlparse(complete_url)
         connection = HTTPConnection(host=url_elements.hostname, port=url_elements.port)
         combined_headers = self.default_headers.copy()
         byte_body : bytes = ''.encode(UTF_8)
-        if body:
-            byte_body = self.convert_body_to_bytes(body)
-            combined_headers.update({CONTENT_LENGTH: str(len(byte_body))})
+        if files or fields:
+            byte_body, boundary = self.encode_multipart_formdata(files=files if files else dict(), fields=fields if fields else dict())
+            combined_headers[CONTENT_TYPE] = 'multipart/form-data; boundary=%s' % boundary
+        elif body:
+            byte_body = self.convert_body_to_bytes(body=body)
+        combined_headers.update({CONTENT_LENGTH: str(len(byte_body))})
         if headers is not None:
             combined_headers.update(headers)
         connection.request(method=method, url=url_elements.path, body=byte_body, headers=combined_headers)
@@ -65,25 +68,25 @@ class HttpClient:
         return response
 
     def get(self, path: str, headers: Dict = None) -> HttpResponse:
-        return self.http_request(GET, path, headers, None)
+        return self.http_request(GET, path=path, headers=headers)
 
-    def post(self, path: str, headers: Dict = None, body: Any = None) -> HttpResponse:
-        return self.http_request(POST, path, headers, body)
+    def post(self, path: str, headers: Dict = None, body: Any = None, fields: Dict[str, Any] = None, files: Dict[str, TextIO] = None) -> HttpResponse:
+        return self.http_request(POST, path=path, headers=headers, body=body, fields=fields, files=files)
 
-    def patch(self, path: str, headers: Dict = None, body: Any = None) -> HttpResponse:
-        return self.http_request(PATCH, path, headers, body)
+    def patch(self, path: str, headers: Dict = None, body: Any = None, fields: Dict[str, Any] = None, files: Dict[str, TextIO] = None) -> HttpResponse:
+        return self.http_request(PATCH, path=path, headers=headers, body=body, fields=fields, files=files)
 
-    def put(self, path: str, headers: Dict = None, body: Any = None) -> HttpResponse:
-        return self.http_request(PUT, path, headers, body)
+    def put(self, path: str, headers: Dict = None, body: Any = None, fields: Dict[str, Any] = None, files: Dict[str, TextIO] = None) -> HttpResponse:
+        return self.http_request(PUT, path=path, headers=headers, body=body, fields=fields, files=files)
 
     def delete(self, path: str, headers: Dict = None) -> HttpResponse:
-        return self.http_request(DELETE, path, headers, None)
+        return self.http_request(DELETE, path=path, headers=headers)
 
     def options(self, path: str, headers: Dict = None) -> HttpResponse:
-        return self.http_request(OPTIONS, path, headers, None)
+        return self.http_request(OPTIONS, path=path, headers=headers)
 
     def head(self, path: str, headers: Dict = None) -> HttpResponse:
-        return self.http_request(HEAD, path, headers, None)
+        return self.http_request(HEAD, path=path, headers=headers)
 
     def convert_body_to_bytes(cls, body: Any) -> bytes:
         if isinstance(body, dict):
@@ -97,24 +100,28 @@ class HttpClient:
     def get_content_type(self, filename: str) -> str:
         return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
 
-    def encode_multipart_formdata(self, fields: Dict[str, Any], files: List[TextIO]):
+    def encode_multipart_formdata(self, fields: Dict[str, Any], files: Dict[str, TextIO]) -> Tuple[bytes, str]:
+        '''
+        Build a multipart/form-data body with generated random boundary.
+        '''
         boundary = '----------%s' % hex(int(time.time() * 1000))
         data: List[str] = []
-        for k, v in fields.items():
+        for key, value in fields.items():
             data.append('--%s' % boundary)
-            data.append('Content-Disposition: form-data; name="%s"\r\n' % k)
-            if isinstance(v, str):
-                data.append(v)
-            elif isinstance(v, bytes):
-                data.append(v.decode('utf-8'))
+            data.append('Content-Disposition: form-data; name="%s"\r\n' % key)
+            if isinstance(value, str):
+                data.append(value)
+            elif isinstance(value, bytes):
+                data.append(value.decode('utf-8'))
             else:
-                data.append(str(v))
+                data.append(str(value))
 
-        for file in files:
+        for key, file in files.items():
+            data.append('--%s' % boundary)
             content = file.read()
-            data.append('Content-Disposition: form-data; name="%s"; filename="hidden"' % k)
+            data.append('Content-Disposition: form-data; name="%s"; filename="%s"' % (key, file.name))
             data.append('Content-Length: %d' % len(content))
             data.append('Content-Type: %s\r\n' % self.get_content_type(file.name.lower()))
             data.append(content)
         data.append('--%s--\r\n' % boundary)
-        return '\r\n'.join(data), boundary
+        return '\r\n'.join(data).encode(UTF_8), boundary
