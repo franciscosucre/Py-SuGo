@@ -174,7 +174,7 @@ class ParseBodyJsonTestCase(HttpRequestMixin, TestCase):
 
 
 class ParseBodyFormDataTestCase(TestCase, ServerTestMixin):
-    port: int = 50005
+    port: int = 50006
 
 
 class CorsTestCase(ServerTestMixin, HttpRequestMixin, TestCase):

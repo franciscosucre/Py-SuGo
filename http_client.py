@@ -1,7 +1,7 @@
 # Standard libs imports
 import json
 import mimetypes
-from typing import Any, Dict, Union, Tuple
+from typing import Any, Dict, Tuple, Union
 from http.client import HTTPConnection
 from urllib.parse import urlparse
 from wsgiref.headers import Headers

@@ -1,14 +1,13 @@
 # Standard libs imports
-from threading import Thread
 from typing import List
-
-# Third party libs imports
+from threading import Thread
 from wsgiref.simple_server import WSGIServer, make_server
 
-from middleware import Middleware, RequestHandler
+# Third party libs imports
+from server import PySuGoServer
 from request import Request
 from response import Response
-from server import PySuGoServer
+from middleware import Middleware, RequestHandler
 
 
 class Application:

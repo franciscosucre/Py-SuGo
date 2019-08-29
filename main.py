@@ -1,11 +1,14 @@
 # Third party libs imports
+# Standard libs imports
 from time import sleep
 
-from application import Application
-from middleware import parse_body_json, parse_body_form_data, log_request, log_response, handle_errors, NextFunction
+from router import Router
 from request import Request
 from response import Response
-from router import Router
+from middleware import (
+    NextFunction, log_request, log_response, handle_errors, parse_body_json,
+    parse_body_form_data)
+from application import Application
 
 
 def hello_world(request: Request, response: Response, next_layer: NextFunction):
@@ -35,6 +38,3 @@ if __name__ == "__main__":
     app.use_middleware(parse_body_json)
     app.use_middleware(parse_body_form_data)
     app.listen()
-
-
-

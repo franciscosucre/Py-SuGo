@@ -1,11 +1,12 @@
 # Standard libs imports
 import random
 from io import BufferedReader
-from string import (ascii_lowercase, ascii_uppercase, digits, octdigits)
-from typing import List, cast, Any, Dict
+from string import digits, octdigits, ascii_lowercase, ascii_uppercase
+from typing import Any, Dict, List, cast
 from urllib.parse import parse_qs
 from wsgiref.headers import Headers
 
+# Third party libs imports
 from core import HttpHeader
 
 HTTP_HEADERS: List[str] = [
