@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from wsgiref.headers import Headers
 
 # First party libs imports
-from py_sugo.core import (GET, PUT, HEAD, POST, PATCH, UTF_8, DELETE, OPTIONS, CONTENT_TYPE, CONTENT_LENGTH)
+from py_sugo.core import GET, PUT, HEAD, POST, PATCH, UTF_8, DELETE, OPTIONS, CONTENT_TYPE, CONTENT_LENGTH
 
 
 class HttpResponse:
@@ -30,7 +30,7 @@ class HttpClient:
     default_headers: Dict = {CONTENT_TYPE: 'plain/text'}
     base_url: str
 
-    def __init__(self, default_headers: Dict = default_headers, base_url: str = ''):
+    def __init__(self, default_headers: Dict = None, base_url: str = ''):
         self.default_headers = default_headers if default_headers else dict()
         self.base_url = base_url
 
@@ -90,14 +90,17 @@ class HttpClient:
     def head(self, path: str, headers: Dict = None) -> HttpResponse:
         return self.http_request(HEAD, path=path, headers=headers)
 
-    def convert_body_to_bytes(cls, body: Any) -> bytes:
+    def convert_body_to_bytes(self, body: Any) -> bytes:
+        result: bytes
         if isinstance(body, dict):
-            return json.dumps(body).encode(UTF_8)
+            result = json.dumps(body).encode(UTF_8)
         elif isinstance(body, str):
-            return body.encode(UTF_8)
+            result = body.encode(UTF_8)
         elif body is None:
-            return ''.encode(UTF_8)
-        return cast(bytes, body)
+            result = ''.encode(UTF_8)
+        else:
+            result = cast(bytes, body)
+        return result
 
     def get_content_type(self, filename: str) -> str:
         return mimetypes.guess_type(filename)[0] or 'application/octet-stream'

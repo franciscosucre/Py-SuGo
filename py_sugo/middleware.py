@@ -34,7 +34,6 @@ def parse_body_form_data(request: Request, response: Response, next_layer: NextF
         form_data: cgi.FieldStorage = cgi.FieldStorage(fp=io.BytesIO(request.raw_body), environ=request.environ, keep_blank_values=True)
         assert form_data.list is not None
         field_storages: List[cgi.FieldStorage] = form_data.list
-        keys = form_data.keys()
         files: Dict[str, FileData] = dict()
         fields: Dict[str, Any] = dict()
 
