@@ -6,8 +6,8 @@ from typing import Any, Dict, List, cast
 from urllib.parse import parse_qs
 from wsgiref.headers import Headers
 
-# Third party libs imports
-from core import CONTENT_LENGTH
+# First party libs imports
+from py_sugo.core import CONTENT_LENGTH
 
 HTTP_HEADERS: List[str] = [
     "A_IM",

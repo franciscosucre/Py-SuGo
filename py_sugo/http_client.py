@@ -7,8 +7,8 @@ from http.client import HTTPResponse, HTTPConnection
 from urllib.parse import urlparse
 from wsgiref.headers import Headers
 
-# Third party libs imports
-from core import (
+# First party libs imports
+from py_sugo.core import (
     GET, PUT, HEAD, POST, PATCH, UTF_8, DELETE, OPTIONS, CONTENT_TYPE,
     CONTENT_LENGTH)
 

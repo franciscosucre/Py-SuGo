@@ -3,11 +3,11 @@ from typing import List
 from threading import Thread
 from wsgiref.simple_server import WSGIServer, make_server
 
-# Third party libs imports
-from server import PySuGoServer
-from request import Request
-from response import Response
-from middleware import Middleware, RequestHandler
+# First party libs imports
+from py_sugo.server import PySuGoServer
+from py_sugo.request import Request
+from py_sugo.response import Response
+from py_sugo.middleware import Middleware, RequestHandler
 
 
 class Application:

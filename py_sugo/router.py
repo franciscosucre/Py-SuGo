@@ -2,11 +2,11 @@
 import re
 from typing import List, Union, Pattern
 
-# Third party libs imports
-from core import GET, PUT, HEAD, POST, PATCH, DELETE, OPTIONS
-from request import Request
-from response import Response
-from application import Middleware, RequestHandler
+# First party libs imports
+from py_sugo.core import GET, PUT, HEAD, POST, PATCH, DELETE, OPTIONS
+from py_sugo.request import Request
+from py_sugo.response import Response
+from py_sugo.middleware import Middleware, RequestHandler
 
 Handler = Union[RequestHandler, Middleware]
 

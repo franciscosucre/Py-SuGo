@@ -1,12 +1,12 @@
 # Standard libs imports
 import json
 from http import HTTPStatus
-from typing import Any, Dict
+from typing import Dict
 from wsgiref.headers import Headers
 
-# Third party libs imports
-from core import CONTENT_TYPE, CONTENT_LENGTH
-from request import Request
+# First party libs imports
+from py_sugo.core import CONTENT_TYPE, CONTENT_LENGTH
+from py_sugo.request import Request
 
 
 class Response:

@@ -7,10 +7,10 @@ import traceback
 from typing import Any, Dict, List, Callable
 from datetime import datetime
 
-# Third party libs imports
-from core import CONTENT_TYPE
-from request import Request
-from response import Response
+# First party libs imports
+from py_sugo.core import CONTENT_TYPE
+from py_sugo.request import Request
+from py_sugo.response import Response
 
 NextFunction = Callable[[], Any]
 Middleware = Callable[[Request, Response, NextFunction], Any]
