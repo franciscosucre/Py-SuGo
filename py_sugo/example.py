@@ -3,9 +3,7 @@
 from py_sugo.router import Router
 from py_sugo.request import Request
 from py_sugo.response import Response
-from py_sugo.middleware import (
-    NextFunction, log_request, log_response, handle_errors, parse_body_json,
-    parse_body_form_data)
+from py_sugo.middleware import (NextFunction, log_request, log_response, handle_errors, parse_body_json, parse_body_form_data)
 from py_sugo.application import Application
 
 

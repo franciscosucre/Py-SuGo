@@ -10,13 +10,10 @@ from http.client import HTTPResponse, HTTPConnection
 
 # First party libs imports
 from py_sugo.core import GET, PUT, POST, PATCH, DELETE, CONTENT_TYPE
-from py_sugo.router import (
-    Route, Router, RouteNotFoundException, RouteAlreadyExistsException)
+from py_sugo.router import (Route, Router, RouteNotFoundException, RouteAlreadyExistsException)
 from py_sugo.request import Request
 from py_sugo.response import Response
-from py_sugo.middleware import (
-    Middleware, NextFunction, CorsMiddleware, RequestHandler, parse_body_json,
-    parse_body_form_data)
+from py_sugo.middleware import (Middleware, NextFunction, CorsMiddleware, RequestHandler, parse_body_json, parse_body_form_data)
 from py_sugo.application import Application
 from py_sugo.http_client import HttpClient, HttpResponse
 

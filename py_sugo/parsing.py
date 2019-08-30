@@ -15,11 +15,11 @@ def parse(text: str):
         return input
     return input
 
-DATE_FORMATS: List[str] = [
 
-]
+DATE_FORMATS: List[str] = []
 
-def is_date(input:str) -> bool:
+
+def is_date(input: str) -> bool:
     for format in DATE_FORMATS:
         try:
             return datetime.strptime(input, format)
@@ -27,5 +27,6 @@ def is_date(input:str) -> bool:
             pass
     return None
 
-def parse_date(input:str):
+
+def parse_date(input: str):
     pass
